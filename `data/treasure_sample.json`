@@ -1,0 +1,24 @@
+json
+[
+{
+"id": "TC_001",
+"text": "The results of our analysis نشان می‌دهد که inhibitory control بسیار حیاتی است.",
+"languages": ["en", "fa"],
+"switch_points": [4, 5],
+"inhibition_required": true
+},
+{
+"id": "TC_002",
+"text": "Bu modelin performansı در مقایسه با روش‌های قدیمی significantly higher است.",
+"languages": ["tr", "fa", "en"],
+"switch_points": [3, 6],
+"inhibition_required": true
+},
+{
+"id": "TC_003",
+"text": "Menim fikrimce، این الگو می‌تواند lexical interference را به حداقل برساند.",
+"languages": ["az", "fa", "en"],
+"switch_points": [2, 5],
+"inhibition_required": true
+}
+]
