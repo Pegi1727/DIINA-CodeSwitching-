@@ -1,0 +1,18 @@
+yaml
+cff-version: 1.2.0
+message: "If you use this software or the DIINA architecture, please cite it as below."
+authors:
+- family-names: "Pegah"
+given-names: "Dr."
+title: "DIINA: Dynamic Inhibitory Interface for Neural Architectures"
+version: 1.0.0
+date-released: 2026-06-01
+url: "https://github.com/your-username/DIINA-CodeSwitching"
+preferred-citation:
+type: article
+authors:
+- family-names: "Pegah"
+given-names: "Dr."
+journal: "Scientific Reports / Neural Computing"
+title: "DIINA: A neural architecture with Dynamic Inhibitory Regulation for stabilizing multilingual code-switching"
+year: 2026
