@@ -1,0 +1,63 @@
+python
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+‌
+class DynamicInhibitoryRegulator(nn.Module):
+"""
+Implementation of Appendix C.1: DIR Module
+Formula: w_inh = sigma(W_inh[H; C] + b_inh)
+"""
+def __init__(self, hidden_dim, context_dim):
+super(DynamicInhibitoryRegulator, self).__init__()
+self.W_inh = nn.Linear(hidden_dim + context_dim, 1)
+self.sigma = nn.Sigmoid()
+‌
+def forward(self, H, C):
+# H: [batch, seq, dim], C: [batch, seq, ctx_dim]
+combined = torch.cat((H, C), dim=-1)
+w_inh = self.sigma(self.W_inh(combined))
+return w_inh
+‌
+class InhibitionAugmentedAttention(nn.Module):
+"""
+Implementation of Appendix C.2: Inhibition-Augmented Attention
+Formula: Att_inh = softmax((QK^T / d_k) + B_inh)V
+"""
+def __init__(self, d_model, n_heads):
+super(InhibitionAugmentedAttention, self).__init__()
+self.n_heads = n_heads
+self.d_k = d_model // n_heads
+self.q_linear = nn.Linear(d_model, d_model)
+self.k_linear = nn.Linear(d_model, d_model)
+self.v_linear = nn.Linear(d_model, d_model)
+self.out_projection = nn.Linear(d_model, d_model)
+‌
+def forward(self, Q, K, V, B_inh=None):
+batch_size = Q.size(0)
+Q = self.q_linear(Q).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
+K = self.k_linear(K).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
+V = self.v_linear(V).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
+‌
+scores = torch.matmul(Q, K.transpose(-2, -1)) / (self.d_k ** 0.5)
+‌
+if B_inh is not None:
+scores = scores + B_inh
+‌
+attn_weights = F.softmax(scores, dim=-1)
+context = torch.matmul(attn_weights, V)
+context = context.transpose(1, 2).contiguous().view(batch_size, -1, self.n_heads * self.d_k)
+return self.out_projection(context)
+‌
+class DIINABlock(nn.Module):
+def __init__(self, d_model, n_heads, context_dim):
+super(DIINABlock, self).__init__()
+self.dir_module = DynamicInhibitoryRegulator(d_model, context_dim)
+self.inh_attention = InhibitionAugmentedAttention(d_model, n_heads)
+self.layernorm = nn.LayerNorm(d_model)
+‌
+def forward(self, x, context_cues):
+w_inh = self.dir_module(x, context_cues)
+B_inh = -10.0 * w_inh.unsqueeze(1)
+attn_out = self.inh_attention(x, x, x, B_inh=B_inh)
+return self.layernorm(x + attn_out)
